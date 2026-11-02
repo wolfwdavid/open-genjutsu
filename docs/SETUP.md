@@ -129,3 +129,21 @@ Builds the Svelte UI on first run and serves http://127.0.0.1:8765 from the `.ve
   fails on the first node type the server does not know, which pinpoints a missing custom node.
 - `run_example.ps1 -Side cat -Probe` renders 33 frames and reports seconds per frame
   (Arc 140T: ~28 s/frame; an RTX 4090 should be well under 5).
+
+## 6. Cloud render lane (optional, skips sections 2 and 3)
+
+If you do not want to run the 14B model locally, use the Comfy developer platform build in
+`comfy-build.yaml`. You still need section 1 for the prep scripts and section 4 for the lip pass.
+
+```
+pip install -U comfy-cli
+comfy cloud login
+comfy build release ls comfy-build.yaml            # a green release exists (v1)
+comfy deploy up comfy-build.yaml --gpu rtx-pro-6000-mig-2g-48gb --region us --min 0 --max 1
+comfy deploy status comfy-build.yaml --watch       # until ready (~5 min: 22 GB of models are staged)
+python run_cloud.py --block E --side L --ref refs/cat_body_base_hq.png --name cat_cloud --prompt "..." \
+    --width 768 --height 576 --length 33 --stride 2 --probe 33
+```
+
+`run_cloud.py` takes the same flags as `wan_animate.py`. A deployment with `--min 0` bills only
+while a job runs. `comfy deploy stop comfy-build.yaml` when you are done.
