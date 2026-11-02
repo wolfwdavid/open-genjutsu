@@ -8,6 +8,10 @@ Two files are written next to this script:
                                  for one 33-frame window with no continue_motion)
   wan_animate_replace.json       editor-format workflow (nodes, links, positions) built from the
                                  same graph; drag it onto the ComfyUI canvas
+  wan_animate_replace_cloud.api.json
+                                 the same window as run_cloud.py submits to a Comfy developer
+                                 platform deployment: inputs are video clips and an image
+                                 (uploaded by `comfy deploy run`), output is one mp4
 
 The editor format needs the node definitions (widget order) from a running ComfyUI:
   python workflows/export_workflow.py --comfy http://127.0.0.1:8188
@@ -31,8 +35,7 @@ import wan_animate  # noqa: E402
 PLACEHOLDER_DIR = "<WORK>/wan/<name>/in"
 
 
-def build_api_graph() -> dict:
-    a = types.SimpleNamespace(
+_ARGS = dict(
         unet="Wan2.2-Animate-14B-Q4_K_M.gguf",
         text_encoder="umt5-xxl-encoder-Q5_K_M.gguf",
         clip_vision="clip_vision_h.safetensors",
@@ -47,14 +50,27 @@ def build_api_graph() -> dict:
         seed=20260925, steps=6, cfg=1.0, sampler="euler", scheduler="simple",
         decode_tile=512, decode_frames=64,
         name="cat",
-    )
+)
+_MODELS = {"loras": [("lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors", 1.0),
+                     ("WanAnimate_relight_lora_fp16.safetensors", 1.0)]}
+
+
+def build_api_graph() -> dict:
+    a = types.SimpleNamespace(**_ARGS)
     win = dict(index=0, length=33, seq_start=0,
                pose_dir=f"{PLACEHOLDER_DIR}/pose", bg_dir=f"{PLACEHOLDER_DIR}/bg",
                mask_dir=f"{PLACEHOLDER_DIR}/mask", face_dir=f"{PLACEHOLDER_DIR}/face")
-    models = {"loras": [("lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors", 1.0),
-                        ("WanAnimate_relight_lora_fp16.safetensors", 1.0)]}
-    nodes, _ = wan_animate.build_window(a, win, models, None)
+    nodes, _ = wan_animate.build_window(a, win, _MODELS, None)
     return nodes
+
+
+def build_cloud_graph() -> dict:
+    import run_cloud
+    a = types.SimpleNamespace(**_ARGS, clip_fps=12.0, clip_crf=4)
+    win = dict(index=0, length=33, seq_start=0, prev_count=0)
+    clips = {k: Path(f"<asset-root>/{k}.mp4") for k in ("pose", "bg", "mask", "face")}
+    clips["ref"] = Path("<asset-root>/ref.png")
+    return run_cloud.build_window_cloud(a, win, _MODELS, clips, None)
 
 
 def fetch_object_info(url: str) -> dict:
@@ -144,6 +160,9 @@ def main() -> int:
     api = build_api_graph()
     (HERE / "wan_animate_replace.api.json").write_text(json.dumps(api, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"wrote {HERE / 'wan_animate_replace.api.json'} ({len(api)} nodes)")
+    cloud = build_cloud_graph()
+    (HERE / "wan_animate_replace_cloud.api.json").write_text(json.dumps(cloud, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"wrote {HERE / 'wan_animate_replace_cloud.api.json'} ({len(cloud)} nodes)")
     if a.comfy:
         info = fetch_object_info(a.comfy)
         wf = to_editor_format(api, info)

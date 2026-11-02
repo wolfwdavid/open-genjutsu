@@ -1,0 +1,333 @@
+{
+  "1": {
+    "class_type": "UnetLoaderGGUF",
+    "inputs": {
+      "unet_name": "Wan2.2-Animate-14B-Q4_K_M.gguf"
+    }
+  },
+  "2": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "lora_name": "lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors",
+      "strength_model": 1.0
+    }
+  },
+  "3": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "2",
+        0
+      ],
+      "lora_name": "WanAnimate_relight_lora_fp16.safetensors",
+      "strength_model": 1.0
+    }
+  },
+  "4": {
+    "class_type": "ModelSamplingSD3",
+    "inputs": {
+      "model": [
+        "3",
+        0
+      ],
+      "shift": 8.0
+    }
+  },
+  "5": {
+    "class_type": "CLIPLoaderGGUF",
+    "inputs": {
+      "clip_name": "umt5-xxl-encoder-Q5_K_M.gguf",
+      "type": "wan"
+    }
+  },
+  "6": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "wan_2.1_vae.safetensors"
+    }
+  },
+  "7": {
+    "class_type": "CLIPVisionLoader",
+    "inputs": {
+      "clip_name": "clip_vision_h.safetensors"
+    }
+  },
+  "8": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "5",
+        0
+      ],
+      "text": "A real orange and white tabby cat wearing black sunglasses, sitting upright on a wooden stool, rapping into a hanging studio microphone, fixed camera."
+    }
+  },
+  "9": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "5",
+        0
+      ],
+      "text": "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走"
+    }
+  },
+  "10": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "<asset-root>\\ref.png"
+    }
+  },
+  "11": {
+    "class_type": "CLIPVisionEncode",
+    "inputs": {
+      "clip_vision": [
+        "7",
+        0
+      ],
+      "image": [
+        "10",
+        0
+      ],
+      "crop": "none"
+    }
+  },
+  "12": {
+    "class_type": "VHS_LoadVideo",
+    "inputs": {
+      "video": "<asset-root>\\pose.mp4",
+      "force_rate": 0,
+      "custom_width": 0,
+      "custom_height": 0,
+      "frame_load_cap": 33,
+      "skip_first_frames": 0,
+      "select_every_nth": 1
+    }
+  },
+  "13": {
+    "class_type": "ImageScale",
+    "inputs": {
+      "image": [
+        "12",
+        0
+      ],
+      "upscale_method": "lanczos",
+      "width": 768,
+      "height": 576,
+      "crop": "disabled"
+    }
+  },
+  "14": {
+    "class_type": "VHS_LoadVideo",
+    "inputs": {
+      "video": "<asset-root>\\bg.mp4",
+      "force_rate": 0,
+      "custom_width": 0,
+      "custom_height": 0,
+      "frame_load_cap": 33,
+      "skip_first_frames": 0,
+      "select_every_nth": 1
+    }
+  },
+  "15": {
+    "class_type": "ImageScale",
+    "inputs": {
+      "image": [
+        "14",
+        0
+      ],
+      "upscale_method": "lanczos",
+      "width": 768,
+      "height": 576,
+      "crop": "disabled"
+    }
+  },
+  "16": {
+    "class_type": "VHS_LoadVideo",
+    "inputs": {
+      "video": "<asset-root>\\mask.mp4",
+      "force_rate": 0,
+      "custom_width": 0,
+      "custom_height": 0,
+      "frame_load_cap": 33,
+      "skip_first_frames": 0,
+      "select_every_nth": 1
+    }
+  },
+  "17": {
+    "class_type": "ImageScale",
+    "inputs": {
+      "image": [
+        "16",
+        0
+      ],
+      "upscale_method": "nearest-exact",
+      "width": 768,
+      "height": 576,
+      "crop": "disabled"
+    }
+  },
+  "18": {
+    "class_type": "ImageToMask",
+    "inputs": {
+      "image": [
+        "17",
+        0
+      ],
+      "channel": "red"
+    }
+  },
+  "19": {
+    "class_type": "VHS_LoadVideo",
+    "inputs": {
+      "video": "<asset-root>\\face.mp4",
+      "force_rate": 0,
+      "custom_width": 0,
+      "custom_height": 0,
+      "frame_load_cap": 33,
+      "skip_first_frames": 0,
+      "select_every_nth": 1
+    }
+  },
+  "20": {
+    "class_type": "WanAnimateToVideo",
+    "inputs": {
+      "positive": [
+        "8",
+        0
+      ],
+      "negative": [
+        "9",
+        0
+      ],
+      "vae": [
+        "6",
+        0
+      ],
+      "width": 768,
+      "height": 576,
+      "length": 33,
+      "batch_size": 1,
+      "clip_vision_output": [
+        "11",
+        0
+      ],
+      "reference_image": [
+        "10",
+        0
+      ],
+      "pose_video": [
+        "13",
+        0
+      ],
+      "background_video": [
+        "15",
+        0
+      ],
+      "character_mask": [
+        "18",
+        0
+      ],
+      "continue_motion_max_frames": 5,
+      "video_frame_offset": 0,
+      "face_video": [
+        "19",
+        0
+      ]
+    }
+  },
+  "21": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "4",
+        0
+      ],
+      "positive": [
+        "20",
+        0
+      ],
+      "negative": [
+        "20",
+        1
+      ],
+      "latent_image": [
+        "20",
+        2
+      ],
+      "seed": 20260925,
+      "steps": 6,
+      "cfg": 1.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1.0
+    }
+  },
+  "22": {
+    "class_type": "TrimVideoLatent",
+    "inputs": {
+      "samples": [
+        "21",
+        0
+      ],
+      "trim_amount": [
+        "20",
+        3
+      ]
+    }
+  },
+  "23": {
+    "class_type": "VAEDecodeTiled",
+    "inputs": {
+      "samples": [
+        "22",
+        0
+      ],
+      "vae": [
+        "6",
+        0
+      ],
+      "tile_size": 512,
+      "overlap": 64,
+      "temporal_size": 64,
+      "temporal_overlap": 4
+    }
+  },
+  "24": {
+    "class_type": "ImageFromBatch",
+    "inputs": {
+      "image": [
+        "23",
+        0
+      ],
+      "batch_index": [
+        "20",
+        4
+      ],
+      "length": 33
+    }
+  },
+  "25": {
+    "class_type": "VHS_VideoCombine",
+    "inputs": {
+      "images": [
+        "24",
+        0
+      ],
+      "frame_rate": 12.0,
+      "loop_count": 0,
+      "filename_prefix": "cat_w00",
+      "format": "video/h264-mp4",
+      "pix_fmt": "yuv420p",
+      "crf": 4,
+      "save_metadata": false,
+      "trim_to_audio": false,
+      "pingpong": false,
+      "save_output": true
+    }
+  }
+}

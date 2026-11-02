@@ -110,6 +110,27 @@ A release of this spec is already built and green on the platform (Build `2ba4aa
 release `b0400e09-05c1-43fd-80e5-61c72f361e97` v1, Linux NVIDIA cu130, cut 2026-11-02). Seven of the nine
 weights resolved to verified public Hugging Face sources by digest; only the two ViTPose files were uploaded.
 
+**It is deployed and tested.** `run_cloud.py` is the same render as `wan_animate.py`, but each
+33-frame window is one `comfy deploy run` against the deployment: the laptop does the cheap
+per-frame prep (pose, masks, face crops), uploads them as four small H.264 clips plus the reference
+plate (18 MB total, deduped by hash), the 48 GB RTX PRO 6000 worker renders the window, and the
+returned mp4 is decoded back to frames so `deflicker.py`, `to30.py` and `lip_pass.py` run unchanged.
+The graph it submits is `workflows/wan_animate_replace_cloud.api.json`.
+
+| | local Arc 140T iGPU | deployment (RTX PRO 6000 MIG 48 GB) |
+|---|---|---|
+| 33-frame probe window | ~15 min | 81 s wall, including upload and download |
+| full 181-frame block | ~1.5 h | ~7 min projected |
+
+<p align="center"><img src="docs/images/cloud_probe_sheet.jpg" width="820" alt="three frames of the first window rendered on the deployment"></p>
+
+```
+comfy deploy status comfy-build.yaml                       # must be ready
+python run_cloud.py --block E --side L --ref refs/cat_body_base_hq.png --name cat_cloud     --prompt "..." --width 768 --height 576 --length 33 --stride 2 --probe 33
+```
+
+The deployment scales to zero between jobs (`--min 0 --max 1`), so it costs nothing while idle.
+
 The spec expects `models/` and `custom_nodes/` next to it (symlink or junction them to your
 ComfyUI install's folders). Pip pins are intentionally emptied for the first cut because the
 source environment was torch XPU on Windows.
@@ -146,7 +167,8 @@ python finish.py --blocks work_ex/blocks.json --input work_ex/wan/cat24_lips.mp4
 
 | path | what |
 |---|---|
-| `wan_animate.py`, `wan_animate2.py`, `seedvr2_upscale.py` | ComfyUI graph builders and window drivers |
+| `wan_animate.py`, `wan_animate2.py`, `seedvr2_upscale.py` | ComfyUI graph builders and window drivers (local ComfyUI) |
+| `run_cloud.py` | the same render against a Comfy developer platform deployment |
 | `pose_body.py`, `cat_pose.py`, `face_crops.py`, `make_fur_mask.py`, `make_refs.py`, `make_cat_ref.py` | per-frame inputs and reference plates |
 | `deflicker.py`, `to30.py`, `splice_frames.py`, `shot_fix_inputs.py` | post passes |
 | `mouth_curve.py`, `lip_pass.py`, `animate_cat.py`, `vendor/lp_harness/` | lip sync |
