@@ -94,6 +94,22 @@ powershell -ExecutionPolicy Bypass -File studio\run_studio.ps1    # http://127.0
 
 Details in [`studio/README.md`](studio/README.md). FastAPI + Svelte 5.
 
+## Comfy developer platform build
+
+`comfy-build.yaml` is the environment scanned from the install that rendered the demo: ComfyUI
+v0.37.0, the three node packs pinned to the exact commits, and all nine weights with sha256
+digests. With [comfy-cli](https://github.com/Comfy-Org/comfy-cli) (`pip install -U comfy-cli`):
+
+```
+comfy build validate comfy-build.yaml          # offline
+comfy build push comfy-build.yaml              # needs `comfy cloud login`; public weights dedupe to fetches
+comfy build release create comfy-build.yaml --target linux/nvidia --watch
+```
+
+The spec expects `models/` and `custom_nodes/` next to it (symlink or junction them to your
+ComfyUI install's folders). Pip pins are intentionally emptied for the first cut because the
+source environment was torch XPU on Windows.
+
 ## Run it
 
 Setup for NVIDIA (CUDA) and Intel Arc (XPU) is in [`docs/SETUP.md`](docs/SETUP.md).
@@ -134,6 +150,7 @@ python finish.py --blocks work_ex/blocks.json --input work_ex/wan/cat24_lips.mp4
 | `run_example.ps1`, `run_render.ps1`, `run_cat_fix.ps1` | one-command renders (start ComfyUI, render, splice) |
 | `studio/` | Render Studio web app |
 | `workflows/` | exported ComfyUI graph + exporter |
+| `comfy-build.yaml` | Comfy developer platform build spec (models, node packs, ComfyUI ref) |
 | `kaggle/` | the same render on a Kaggle T4 |
 | `docs/history/` | design record, runbook and lessons from the build (Sep to Oct 2026) |
 

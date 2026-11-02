@@ -39,3 +39,7 @@ refs/user_ref_prev_*
 !demo/*.mp4
 work_ex/
 refs/face_uploads/
+
+# local junctions used by comfy build (point at the ComfyUI install)
+/custom_nodes/
+/models/

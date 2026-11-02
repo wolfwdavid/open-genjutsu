@@ -10,6 +10,8 @@ scripts) and `hugginface_profile/video_generator` (Render Studio, run scripts).
 - [x] Judge-facing README, `docs/SETUP.md` (CUDA + XPU), `docs/OWN_CLIP.md`
 - [x] Demo render and QA sheets tracked (`demo/`, `docs/images/`)
 - [ ] Public GitHub repo under wolfwdavid, pushed (local commit 8c9f51a ready; `gh repo create` needs the user to run it)
+- [x] comfy-build.yaml scanned, patched (GGUF/ONNX added, XPU pins emptied), validate + push --dry-run green (9 models, 22 GB upper bound)
+- [ ] `comfy cloud login` + `comfy build push` + `release create --target linux/nvidia` (user must say yes: upload and a release slot)
 - [ ] Clean-clone test on the second laptop: follow `docs/SETUP.md` steps 0 to 2, note anything that breaks
 
 ## Demo video (user records)
