@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>POV Switch</title>
+<style>
+  :root { --bg:#0b0d10; --panel:#14181d; --line:#232a32; --fg:#e8edf2; --dim:#8a97a6; --acc:#ffb347; --acc2:#5ad1ff; --bad:#ff5d5d; }
+  * { box-sizing:border-box }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.45 ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif; }
+  header { display:flex; align-items:center; gap:14px; padding:14px 20px; border-bottom:1px solid var(--line); }
+  header h1 { font-size:18px; margin:0; letter-spacing:.04em }
+  header h1 span { color:var(--acc) }
+  header .dep { margin-left:auto; color:var(--dim); font-size:13px }
+  header .dep b { color:var(--acc2) }
+  main { display:grid; grid-template-columns: 380px 1fr; gap:0; min-height:calc(100vh - 57px) }
+  aside { border-right:1px solid var(--line); padding:16px; overflow:auto }
+  section { padding:16px 20px; overflow:auto }
+  h2 { font-size:12px; text-transform:uppercase; letter-spacing:.12em; color:var(--dim); margin:18px 0 8px }
+  .drop { border:2px dashed var(--line); border-radius:12px; padding:26px; text-align:center; color:var(--dim); cursor:pointer }
+  .drop.on { border-color:var(--acc); color:var(--fg) }
+  .moments { display:flex; gap:8px; overflow-x:auto; padding-bottom:6px }
+  .moment { flex:0 0 150px; border:2px solid var(--line); border-radius:8px; overflow:hidden; cursor:pointer; background:#000 }
+  .moment img { width:100%; display:block; aspect-ratio:16/9; object-fit:cover }
+  .moment.sel { border-color:var(--acc) }
+  .moment .t { font-size:12px; color:var(--dim); padding:4px 6px }
+  .chars { display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:8px }
+  .char { border:2px solid var(--line); border-radius:10px; overflow:hidden; cursor:pointer; background:#000; text-align:center }
+  .char img { width:100%; aspect-ratio:1/1; object-fit:cover; display:block }
+  .char .l { font-size:12px; padding:4px; color:var(--dim) }
+  .char.sel { border-color:var(--acc2) }
+  .char.sel .l { color:var(--acc2) }
+  button { background:var(--acc); color:#1a1200; border:0; border-radius:8px; padding:10px 14px; font-weight:700; cursor:pointer }
+  button.alt { background:var(--panel); color:var(--fg); border:1px solid var(--line) }
+  button:disabled { opacity:.45; cursor:default }
+  input, textarea { width:100%; background:var(--panel); color:var(--fg); border:1px solid var(--line); border-radius:8px; padding:9px; font:inherit }
+  .row { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 }
+  .chip { background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:6px 12px; cursor:pointer; font-size:13px }
+  .chip.sel { border-color:var(--acc); color:var(--acc) }
+  .stage { display:grid; grid-template-columns:1fr 1fr; gap:16px }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px }
+  .card img, .card video { width:100%; border-radius:8px; background:#000; display:block }
+  .card .cap { font-size:13px; color:var(--dim); margin-top:8px }
+  .tree { display:flex; flex-direction:column; gap:10px }
+  .node { display:flex; gap:10px; align-items:center; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:8px; cursor:pointer }
+  .node.sel { border-color:var(--acc) }
+  .node img { width:64px; height:36px; object-fit:cover; border-radius:6px; background:#000 }
+  .node .meta { font-size:13px; color:var(--dim) }
+  .node .meta b { color:var(--fg) }
+  .busy { color:var(--acc); font-size:13px }
+  .err { color:var(--bad); font-size:13px; white-space:pre-wrap }
+  .hint { color:var(--dim); font-size:13px }
+</style>
+</head>
+<body>
+<header>
+  <h1>POV <span>SWITCH</span></h1>
+  <div class="hint">drop a clip · pick anyone in it · see it through their eyes · choose how it ends</div>
+  <div class="dep" id="dep">deployment: …</div>
+</header>
+<main>
+  <aside>
+    <div class="drop" id="drop">drop an mp4 here, or click<br><input type="file" id="file" accept="video/mp4" hidden></div>
+    <div id="status" class="hint" style="margin-top:8px"></div>
+
+    <h2>1 · moment of decision</h2>
+    <div class="moments" id="moments"></div>
+
+    <h2>2 · whose eyes?</h2>
+    <div class="chars" id="chars"></div>
+    <input id="name" placeholder="who are you here? e.g. the white-haired girl, the black cat, the marine" style="margin-top:8px">
+    <input id="scene" placeholder="what is happening (optional, helps the model)" style="margin-top:8px">
+    <div class="row"><button id="povBtn" disabled>See it from their eyes</button></div>
+
+    <h2>3 · what happens next?</h2>
+    <div class="row" id="presets">
+      <span class="chip" data-o="They win decisively: the move lands and the other side goes down.">I win</span>
+      <span class="chip" data-o="They lose: the attack is blocked and they are knocked back.">I lose</span>
+      <span class="chip" data-o="Nobody wins: both sides dodge and the moment resets.">draw</span>
+      <span class="chip" data-o="They run away as fast as they can.">run</span>
+    </div>
+    <textarea id="outcome" rows="2" placeholder="or write the outcome in your own words"></textarea>
+    <div class="row"><button id="outBtn" disabled>Play it out</button> <button class="alt" id="contBtn" disabled>Keep going from here</button></div>
+    <div id="busy" class="busy"></div>
+    <div id="err" class="err"></div>
+  </aside>
+  <section>
+    <div class="stage">
+      <div class="card"><div id="left"><div class="hint">source moment</div></div><div class="cap" id="leftCap"></div></div>
+      <div class="card"><div id="right"><div class="hint">their eyes</div></div><div class="cap" id="rightCap"></div></div>
+    </div>
+    <h2>branches · the game tree</h2>
+    <div class="tree" id="tree"></div>
+  </section>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+let clip = null, moment = null, character = null, pov = null, branch = null, outcomeText = '';
+
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  const j = await r.json().catch(() => ({detail: r.statusText}));
+  if (!r.ok) throw new Error(typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail));
+  return j;
+}
+function busy(msg) { $('#busy').textContent = msg || ''; $('#err').textContent = ''; }
+function fail(e) { $('#busy').textContent = ''; $('#err').textContent = e.message || String(e); }
+function fileUrl(rel) { return '/files/' + clip.id + '/' + rel; }
+
+api('/api/deployment').then(d => { $('#dep').innerHTML = `deployment: <b>${d.status || '?'}</b> · release v${d.release ?? '?'}`; }).catch(() => {});
+
+const drop = $('#drop'), file = $('#file');
+drop.onclick = () => file.click();
+drop.ondragover = e => { e.preventDefault(); drop.classList.add('on'); };
+drop.ondragleave = () => drop.classList.remove('on');
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove('on'); if (e.dataTransfer.files[0]) upload(e.dataTransfer.files[0]); };
+file.onchange = () => file.files[0] && upload(file.files[0]);
+
+async function upload(f) {
+  busy('analyzing the clip (frames, shot cuts, characters)…'); $('#status').textContent = f.name;
+  const fd = new FormData(); fd.append('file', f);
+  try { clip = await api('/api/clips', {method: 'POST', body: fd}); renderClip(); busy(''); } catch (e) { fail(e); }
+}
+
+function renderClip() {
+  const a = clip.analysis;
+  $('#moments').innerHTML = a.moments.map(m => `<div class="moment" data-id="${m.id}"><img src="${fileUrl(m.frame)}"><div class="t">${m.t}s · ${m.characters.length} in frame</div></div>`).join('');
+  document.querySelectorAll('.moment').forEach(el => el.onclick = () => selectMoment(el.dataset.id));
+  renderTree();
+  if (a.moments.length) selectMoment(a.moments[0].id);
+}
+function selectMoment(id) {
+  moment = clip.analysis.moments.find(m => m.id === id); character = null; pov = null;
+  document.querySelectorAll('.moment').forEach(el => el.classList.toggle('sel', el.dataset.id === id));
+  $('#left').innerHTML = `<img src="${fileUrl(moment.frame)}">`; $('#leftCap').textContent = `source · ${moment.t}s`;
+  $('#chars').innerHTML = moment.characters.map(c => `<div class="char" data-id="${c.id}"><img src="${fileUrl(c.crop)}"><div class="l">${c.label}</div></div>`).join('') || '<div class="hint">nobody detected here, try another moment</div>';
+  document.querySelectorAll('.char').forEach(el => el.onclick = () => { character = moment.characters.find(c => c.id === el.dataset.id); document.querySelectorAll('.char').forEach(x => x.classList.toggle('sel', x === el)); $('#povBtn').disabled = false; if (character.cls !== 'custom') $('#name').value = 'the ' + character.cls; else $('#name').value = ''; $('#name').focus(); });
+  $('#povBtn').disabled = true; $('#outBtn').disabled = true; $('#contBtn').disabled = true;
+}
+
+$('#povBtn').onclick = async () => {
+  if (!character) return;
+  busy(`rendering ${character.label}'s point of view on the deployment…`); $('#povBtn').disabled = true;
+  try {
+    pov = await api('/api/pov', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({clip: clip.id, moment: moment.id, character: character.id, name: $('#name').value, scene: $('#scene').value || 'in the middle of the action'})});
+    clip.branches.push(pov); branch = pov; showBranch(pov); renderTree(); $('#outBtn').disabled = false; busy('');
+  } catch (e) { fail(e); } finally { $('#povBtn').disabled = false; }
+};
+document.querySelectorAll('.chip').forEach(ch => ch.onclick = () => { document.querySelectorAll('.chip').forEach(x => x.classList.toggle('sel', x === ch)); outcomeText = ch.dataset.o; $('#outcome').value = ''; });
+$('#outcome').oninput = () => { outcomeText = $('#outcome').value; document.querySelectorAll('.chip').forEach(x => x.classList.remove('sel')); };
+
+async function playOut(fromId, path) {
+  const text = outcomeText.trim(); if (!text) { fail(new Error('pick or write an outcome first')); return; }
+  busy('playing it out on the deployment (Wan2.2, ~1 min)…'); $('#outBtn').disabled = true; $('#contBtn').disabled = true;
+  try {
+    const body = path === '/api/outcome' ? {clip: clip.id, pov: fromId, outcome: text} : {clip: clip.id, branch: fromId, outcome: text};
+    const b = await api(path, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+    clip.branches.push(b); branch = b; showBranch(b); renderTree(); busy('');
+  } catch (e) { fail(e); } finally { $('#outBtn').disabled = !pov; $('#contBtn').disabled = !(branch && branch.kind === 'outcome'); }
+}
+$('#outBtn').onclick = () => pov && playOut(pov.id, '/api/outcome');
+$('#contBtn').onclick = () => branch && branch.kind === 'outcome' && playOut(branch.id, '/api/continue');
+
+function showBranch(b) {
+  if (b.kind === 'pov') { $('#right').innerHTML = `<img src="/files/${b.image}">`; $('#rightCap').textContent = `${b.label} · first person · ${b.seconds}s on the GPU`; }
+  else { $('#right').innerHTML = `<video src="/files/${b.video}" autoplay loop muted playsinline controls></video>`; $('#rightCap').textContent = `${b.label} · "${b.outcome}" · ${b.length} frames · ${b.seconds}s on the GPU`; }
+  $('#contBtn').disabled = b.kind !== 'outcome';
+}
+function renderTree() {
+  const bs = clip.branches || [];
+  $('#tree').innerHTML = bs.map(b => `<div class="node ${branch && branch.id === b.id ? 'sel' : ''}" data-id="${b.id}"><img src="/files/${b.image || ''}"><div class="meta"><b>${b.kind === 'pov' ? 'POV' : 'outcome'}</b> · ${b.label}${b.outcome ? ' · "' + b.outcome + '"' : ''}${b.parent ? ' · from ' + b.parent : ''}</div></div>`).join('') || '<div class="hint">nothing generated yet</div>';
+  document.querySelectorAll('.node').forEach(el => el.onclick = () => { branch = bs.find(b => b.id === el.dataset.id); if (branch.kind === 'pov') pov = branch; showBranch(branch); renderTree(); $('#outBtn').disabled = !pov; });
+}
+</script>
+</body>
+</html>
