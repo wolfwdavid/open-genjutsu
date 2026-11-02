@@ -109,10 +109,15 @@ def outcome_clip(start: Path, prompt: str, width: int, height: int, length: int,
 
 
 def pov_prompt(character: str, scene: str, others: str) -> str:
-    return (f"Change the viewpoint: show this exact scene from the first-person point of view of {character}, "
-            f"as seen through their own eyes, {scene}. Keep the same place, lighting, moment and everyone "
-            f"else where they are ({others}). The viewer's own hands, weapon or paws may be visible at the "
-            f"bottom edge. Photorealistic to the source style, same colours, no text, no UI.")
+    low = "cat" in character or "dog" in character or "animal" in character
+    height = ("very low to the ground, the camera is only a few centimetres above the pavement" if low
+              else "at that character's eye height")
+    return (f"Change the camera to a first-person point-of-view shot seen through the eyes of {character}. "
+            f"Remove {character} from the picture entirely: we ARE {character}, looking out of their eyes, "
+            f"{height}, facing the direction they were facing. {character} must not be visible anywhere; "
+            f"at most their own {'paws' if low else 'hands'} appear at the very bottom edge. "
+            f"Keep the same place, lighting, moment, art style and colours, and keep everyone else "
+            f"({others}) where they were, {scene}. Wide-angle, no text, no UI.")
 
 
 def outcome_prompt(character: str, outcome: str, scene: str) -> str:
