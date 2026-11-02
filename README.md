@@ -106,6 +106,10 @@ comfy build push comfy-build.yaml              # needs `comfy cloud login`; publ
 comfy build release create comfy-build.yaml --target linux/nvidia --watch
 ```
 
+A release of this spec is already built and green on the platform (Build `2ba4aa66-00cf-4905-9dcc-347f5acbb29c`,
+release `b0400e09-05c1-43fd-80e5-61c72f361e97` v1, Linux NVIDIA cu130, cut 2026-11-02). Seven of the nine
+weights resolved to verified public Hugging Face sources by digest; only the two ViTPose files were uploaded.
+
 The spec expects `models/` and `custom_nodes/` next to it (symlink or junction them to your
 ComfyUI install's folders). Pip pins are intentionally emptied for the first cut because the
 source environment was torch XPU on Windows.
