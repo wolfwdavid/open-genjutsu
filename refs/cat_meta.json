@@ -1,0 +1,81 @@
+{
+  "eye_l": [
+    193.56,
+    215.04
+  ],
+  "eye_r": [
+    318.44,
+    215.04
+  ],
+  "nose": [
+    249.75,
+    287.33
+  ],
+  "mouth": [
+    246.01,
+    326.44
+  ],
+  "eye_c": [
+    256.0,
+    215.04
+  ],
+  "iod": 124.88,
+  "head_top_y": 54.0,
+  "chin_y": 363.9,
+  "head_w": 265.0,
+  "set_bgr": [
+    5,
+    54,
+    192
+  ],
+  "source": "faces/cat/IMG_9325.PNG",
+  "glasses": {
+    "r_px": 54.9,
+    "stroke_px": 7.0,
+    "colour_bgr": [
+      200,
+      120,
+      40
+    ],
+    "asset": "assets/glasses_blue_512.png"
+  },
+  "hero_points_px": {
+    "eye_l": [
+      432.0,
+      449.0
+    ],
+    "eye_r": [
+      762.0,
+      360.0
+    ],
+    "nose": [
+      632.0,
+      600.0
+    ],
+    "mouth": [
+      650.0,
+      706.0
+    ]
+  },
+  "hero_roll_deg": -15.09,
+  "hero_to_512_scale": 0.36536,
+  "ear_fix": {
+    "mirrored_ear": true,
+    "clip_y": 101.0,
+    "shift_px": -15.0,
+    "added_alpha_px": 953
+  },
+  "affine_hero_to_512": [
+    [
+      0.35276,
+      -0.095138,
+      83.885807
+    ],
+    [
+      0.095138,
+      0.35276,
+      15.551109
+    ]
+  ],
+  "notes": "512x512 LivePortrait source space. Hero photo rotated upright by the eye line, cropped to 4.1 x iod, eyes at y=0.42*512. Alpha = ISNet general-use matte x hand-traced head+neck outline (glove/paws/table excluded, neck faded), feathered 4.0 px. Background and clipped-ear fill = set orange sampled from cut.mp4 frame 300; shadows warmed 7% toward it. Clipped right ear tip rebuilt by mirroring the left ear. Glasses: procedural blue round frames, short symmetric temple stubs, 4x supersampled. Mouth closed."
+}

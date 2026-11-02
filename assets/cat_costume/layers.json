@@ -1,0 +1,23 @@
+{
+  "order": [
+    "stool",
+    "cap_bill",
+    "<cat>",
+    "flannel",
+    "glasses",
+    "cap_crown"
+  ],
+  "eye_l": [
+    307.2,
+    300.9
+  ],
+  "eye_r": [
+    429.8,
+    300.9
+  ],
+  "plate": [
+    636,
+    1024
+  ],
+  "base": "hq"
+}

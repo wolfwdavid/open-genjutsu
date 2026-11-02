@@ -1,0 +1,6 @@
+onnxruntime-directml
+insightface
+opencv-python
+numpy<2.4
+tqdm
+pillow

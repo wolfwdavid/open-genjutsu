@@ -1,0 +1,41 @@
+*.m4a
+*.mp4
+*.onnx
+*.pth
+.venv/
+.venv-lp/
+__pycache__/
+faces/
+models/
+models/xseg_1.onnx
+refs/*.png
+vendor/LivePortrait/
+vendor/LivePortrait/animations/
+vendor/LivePortrait/pretrained_weights/
+work/
+
+# headless ComfyUI (step 13)
+.venv-comfy/
+vendor/ComfyUI/
+vendor/rife-ncnn-vulkan/
+
+# personal reference photos and QA sheets
+refs/*.jpg
+refs/user_ref*.png
+
+# example-based build (source clip, audio, renders)
+work_ex/
+.venv-audio/
+
+# Render Studio (studio/)
+studio/ui/node_modules/
+studio/ui/dist/
+studio/settings.json
+refs/face_uploads/
+refs/user_ref_candidate*
+refs/user_ref_prev_*
+
+# hackathon demo render is tracked on purpose
+!demo/*.mp4
+work_ex/
+refs/face_uploads/
