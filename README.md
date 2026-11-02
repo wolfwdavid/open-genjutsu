@@ -82,6 +82,22 @@ Things that took real work and are reusable on their own:
 - **16 GB iGPU memory discipline.** `--reserve-vram 4` forces a partial load of the 11 GB model so
   the sampler has room; the run scripts resume finished windows after a "device lost".
 
+## Second app: POV Switch, any clip becomes a first-person game
+
+Drop a clip, pick anyone in it (the detector finds people and animals; a "someone else here" card
+covers the rest), see that exact moment through their eyes, choose how it ends, keep playing from
+the last frame. Inspired by the "Halo Wars, but first person" meme.
+
+- Moments of decision: shot cuts by HSV-histogram correlation, motion peaks inside shots, ranked by
+  who is in frame (YOLOv10m, CPU, seconds).
+- Their eyes: Qwen-Image-Edit-2509 (GGUF Q4, 4-step Lightning) rewrites the source frame as that
+  character's first-person view, 1:1 with the clip.
+- The outcome: Wan2.2 I2V A14B (GGUF Q4, two experts, 4-step lightx2v) plays it forward from the
+  POV frame. Every result is a branch in a tree.
+- Both are single `comfy deploy run` jobs against the same deployment (release v2 of the build).
+
+Details and how to run: [`game/README.md`](game/README.md).
+
 ## Render Studio
 
 A local web app over the pipeline so nobody has to touch a node graph or a terminal:
@@ -175,6 +191,7 @@ python finish.py --blocks work_ex/blocks.json --input work_ex/wan/cat24_lips.mp4
 | `finish.py`, `compose.py`, `judge_take.py`, `track.py` | mux, layout, QA |
 | `run_example.ps1`, `run_render.ps1`, `run_cat_fix.ps1` | one-command renders (start ComfyUI, render, splice) |
 | `studio/` | Render Studio web app |
+| `game/` | POV Switch: analyzer, graphs, server, UI |
 | `workflows/` | exported ComfyUI graph + exporter |
 | `comfy-build.yaml` | Comfy developer platform build spec (models, node packs, ComfyUI ref) |
 | `kaggle/` | the same render on a Kaggle T4 |

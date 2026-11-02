@@ -107,6 +107,8 @@ function busy(msg) { $('#busy').textContent = msg || ''; $('#err').textContent =
 function fail(e) { $('#busy').textContent = ''; $('#err').textContent = e.message || String(e); }
 function fileUrl(rel) { return '/files/' + clip.id + '/' + rel; }
 
+const qs = new URLSearchParams(location.search);
+if (qs.get('clip')) { busy('loading clip…'); api('/api/clips/' + qs.get('clip')).then(c => { clip = c; $('#status').textContent = c.id; renderClip(); busy(''); }).catch(fail); }
 api('/api/deployment').then(d => { $('#dep').innerHTML = `deployment: <b>${d.status || '?'}</b> · release v${d.release ?? '?'}`; }).catch(() => {});
 
 const drop = $('#drop'), file = $('#file');
