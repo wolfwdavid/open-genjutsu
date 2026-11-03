@@ -22,6 +22,8 @@ scripts) and `hugginface_profile/video_generator` (Render Studio, run scripts).
 - [x] comfy-build.yaml: 8 open weights resolved by sha256 to public HF sources; release v2 green
 - [x] Deployment on v2; cat POV (41 s), girl POV (19 s), cat outcome (62 s) verified by eye; POV prompt rewritten once (first try showed the character instead of their view)
 - [x] Demo frames into docs/images, README numbers
+- [x] Outcome prompt rewritten (viewer invisible + third-person negative) after the girl's first outcome drifted to third person; re-run is first person with hair at the edge
+- [x] Halo Spartan POV via the "someone else here" card: works (HUD text removed, marine ahead, rifle at the edge)
 
 ## Demo video (user records)
 - [ ] Screen capture per `demo/SHOT_LIST.md`, under 2 min

@@ -34,10 +34,33 @@ Wan2.2 I2V (`demo/game_cat_outcome.mp4`, 49 frames, 842x473):
 
 <p align="center"><img src="../docs/images/game_outcome_cat.jpg" width="840"></p>
 
+The girl's outcome "we open fire and take down all three gunmen" (`demo/game_girl_outcome.mp4`):
+rifle in hand, the gunmen return fire, her hair intrudes at the edge. Honest limit: the video model
+still likes to drift toward an over-the-shoulder view on human characters.
+
+<p align="center"><img src="../docs/images/game_outcome_girl.jpg" width="840"></p>
+
+The meme itself, from the "Halo Wars first person" clip: a third-person moment (left) and the same
+instant through the Spartan's eyes (right), typed in on the "someone else here" card because COCO
+YOLO does not know a Spartan:
+
+<p align="center"><img src="../docs/images/game_pov_halo.jpg" width="540"></p>
+
 | job | model | wall time on the RTX PRO 6000 MIG 48 GB, incl. upload and download |
 |---|---|---|
 | POV frame, 1280x720 | Qwen-Image-Edit-2509 Q4, 4 steps | 19 to 41 s |
 | outcome clip, 49 frames | Wan2.2 I2V A14B Q4, 2 + 2 steps | 62 s |
+
+## What we learned about the prompts
+
+- The edit model keeps the subject by default. "Show this from X's point of view" returned X facing
+  the camera. It works once the prompt says X is removed from the picture, the camera sits at X's
+  eye height (a few centimetres off the ground for a cat), and at most X's own paws or hands may
+  show at the bottom edge.
+- The video model walks a named character back into frame. An outcome written as "she opens fire"
+  produced a third-person shot within a second. The outcome prompt now states "we are X, X is never
+  shown", and the negative prompt lists "third person, over-the-shoulder, character walks into
+  frame". Outcomes read best in the first person plural: "we open fire".
 
 ## What runs where
 
