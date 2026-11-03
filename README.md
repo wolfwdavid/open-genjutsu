@@ -96,7 +96,10 @@ the last frame. Inspired by the "Halo Wars, but first person" meme.
   POV frame. Every result is a branch in a tree.
 - Both are single `comfy deploy run` jobs against the same deployment (release v2 of the build).
 
-Details and how to run: [`game/README.md`](game/README.md).
+<p align="center"><img src="docs/images/game_pov_cat_girl.jpg" width="820" alt="the same moment seen from the black cat and from the girl"></p>
+
+Tested end to end on the deployment: a POV frame takes 20 to 40 s, a 49-frame outcome about a
+minute. Details, results and how to run: [`game/README.md`](game/README.md).
 
 ## Render Studio
 

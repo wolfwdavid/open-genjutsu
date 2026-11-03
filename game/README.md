@@ -21,6 +21,24 @@ works on any footage, including the cat.
 5. **Keep going.** The last frame of every outcome is a new decision point, so the clip becomes a
    tree of branches, all shown under the stage.
 
+## It works
+
+Source moment of the sample clip, then the same instant through the black cat's eyes (left) and
+the white-haired girl's eyes (right), both generated on the deployment:
+
+<p align="center"><img src="../docs/images/game_source_m04.png" width="420"></p>
+<p align="center"><img src="../docs/images/game_pov_cat_girl.jpg" width="840"></p>
+
+The cat's outcome "leaps out, dodges the gunfire and pounces on the gunman" played forward with
+Wan2.2 I2V (`demo/game_cat_outcome.mp4`, 49 frames, 842x473):
+
+<p align="center"><img src="../docs/images/game_outcome_cat.jpg" width="840"></p>
+
+| job | model | wall time on the RTX PRO 6000 MIG 48 GB, incl. upload and download |
+|---|---|---|
+| POV frame, 1280x720 | Qwen-Image-Edit-2509 Q4, 4 steps | 19 to 41 s |
+| outcome clip, 49 frames | Wan2.2 I2V A14B Q4, 2 + 2 steps | 62 s |
+
 ## What runs where
 
 | step | model | where |

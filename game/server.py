@@ -81,7 +81,9 @@ def deploy_run(graph: dict, asset_root: Path, out_dir: Path, timeout: int = 1800
     (out_dir / "run.envelope.json").write_text(json.dumps(env, indent=1), encoding="utf-8")
     if not env.get("ok"):
         e = env.get("error") or {}
-        raise HTTPException(502, f"{e.get('code')}: {e.get('message')} {e.get('hint') or ''}")
+        job_err = ((e.get("details") or {}).get("job") or {}).get("error") or {}
+        msg = job_err.get("message") or e.get("message") or e.get("code")
+        raise HTTPException(502, f"{e.get('code')}: {msg}")
     d = env["data"]
     outs = [Path(o["path"]) for o in (d.get("outputs") or []) if o.get("path")]
     if not outs:
@@ -152,7 +154,11 @@ def make_pov(req: PovReq):
     frame = d / m["frame"]
     seed = req.seed or int(time.time()) % 100000
     g = graphs.pov_frame(frame, prompt, a["width"], a["height"], seed, bid)
-    res = deploy_run(g, d, bdir / "out")
+    try:
+        res = deploy_run(g, d, bdir / "out")
+    except HTTPException:
+        shutil.rmtree(bdir, ignore_errors=True)
+        raise
     pov = bdir / "pov.png"
     shutil.copy(res["output"], pov)
     b = dict(id=bid, kind="pov", moment=m["id"], character=c["id"], label=label, prompt=prompt, seed=seed,
@@ -191,7 +197,11 @@ def make_outcome(req: OutcomeReq):
     seed = req.seed or int(time.time()) % 100000
     length = max(9, min(81, (req.length // 4) * 4 + 1))
     g = graphs.outcome_clip(start, prompt, W, H, length, seed, bid)
-    res = deploy_run(g, d, bdir / "out")
+    try:
+        res = deploy_run(g, d, bdir / "out")
+    except HTTPException:
+        shutil.rmtree(bdir, ignore_errors=True)
+        raise
     clip = bdir / "outcome.mp4"
     shutil.copy(res["output"], clip)
     # the last frame is the next decision point

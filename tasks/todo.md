@@ -20,8 +20,8 @@ scripts) and `hugginface_profile/video_generator` (Render Studio, run scripts).
 - [x] game/graphs.py: Qwen-Image-Edit-2509 POV graph + Wan2.2 I2V two-expert outcome graph, validated by ComfyUI 0.37.0 (queued + cancelled locally; node-level validation passed on the deployment too)
 - [x] game/server.py + game/ui/index.html: upload, moments, characters, POV, outcome, continue, tree
 - [x] comfy-build.yaml: 8 open weights resolved by sha256 to public HF sources; release v2 green
-- [ ] Deployment moved to v2 (staging 17 models), then one POV job + one outcome job verified by eye
-- [ ] Demo frames into docs/images, README numbers
+- [x] Deployment on v2; cat POV (41 s), girl POV (19 s), cat outcome (62 s) verified by eye; POV prompt rewritten once (first try showed the character instead of their view)
+- [x] Demo frames into docs/images, README numbers
 
 ## Demo video (user records)
 - [ ] Screen capture per `demo/SHOT_LIST.md`, under 2 min
