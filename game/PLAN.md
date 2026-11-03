@@ -1,6 +1,6 @@
 # POV Switch: turn any clip into a playable branching game
 
-Second app of the open-genjutsu entry. Plan written 2026-11-02 evening, deadline 2026-11-03 09:00 PT.
+Second app of the open-genjutsu entry. Plan written 2026-11-02 evening, deadline 2026-11-03 08:30 PT.
 
 **What the player does.** Drop a clip. The app finds the characters (people and animals, YOLOv10)
 and the moments of decision (peaks of motion, shot cuts). Pick a character: the view becomes that
@@ -29,3 +29,12 @@ outcome. Every result is a branch you can keep playing from, so the clip becomes
   the clip keeps the source aspect; a square 1:1 crop is an option, not the default.
 - Outcome presets: "I win", "I lose", "nobody wins", plus free text.
 - Clip length 49 frames at 16 fps (3 s) at 832x480 (or 480x832 for portrait sources).
+
+## Lane 3 (2026-11-03): walk it live with Matrix-Game 2.0
+
+The user asked for an "AAA" real-time feel. Matrix-Game 2.0 (Skywork, MIT, 1.8B, 352x640, 3 denoising
+steps, keyboard + camera conditioning, KV-cache streaming) is wrapped as `ComfyUI-MatrixGame2` (sibling
+repo, shipped into the build as a local pack). `/api/walk` sends the branch's frame plus a list of actions;
+the node keeps the world (KV caches, decoder cache) resident on the worker keyed by the branch id, so the
+next key press continues the same world in one short job instead of re-imagining the scene. Status: built,
+CPU-validated, release v3 green; not yet run on a GPU because the workspace ran out of credit.

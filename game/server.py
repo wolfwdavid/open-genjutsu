@@ -5,6 +5,8 @@ server.py -- POV Switch: a local web app that turns a clip into a branching firs
   POST /api/clips            upload an mp4 -> analyze.py -> moments + characters
   POST /api/pov              {clip, moment, character, scene?} -> Qwen-Image-Edit POV frame (one deploy job)
   POST /api/outcome          {clip, pov, outcome} -> Wan2.2 I2V clip from that frame (one deploy job)
+  POST /api/walk             {clip, branch, actions[]} -> Matrix-Game 2.0 first-person chunk, 12 frames per
+                             action, continuing the resident world of the branch (one deploy job, seconds)
   GET  /api/clips/{id}       the clip's analysis and every branch generated so far (the game tree)
   GET  /files/{clip}/...     frames, crops, POV frames, outcome clips
 
@@ -90,7 +92,7 @@ def deploy_run(graph: dict, asset_root: Path, out_dir: Path, timeout: int = 1800
         outs = sorted(p for p in out_dir.rglob("*") if p.suffix.lower() in (".png", ".mp4", ".webp"))
     if not outs:
         raise HTTPException(502, "the job returned no output file")
-    return dict(output=outs[0], seconds=round(time.time() - t0, 1), job=(d.get("job") or {}).get("id"))
+    return dict(output=outs[0], outputs=outs, seconds=round(time.time() - t0, 1), job=(d.get("job") or {}).get("id"))
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -247,6 +249,69 @@ def continue_branch(req: ContinueReq):
     # reuse make_outcome with this branch acting as the start frame
     r = OutcomeReq(clip=req.clip, pov=p["id"], outcome=req.outcome, length=req.length, seed=req.seed)
     return make_outcome(r)
+
+
+class WalkReq(BaseModel):
+    clip: str
+    branch: str              # pov / outcome / walk branch whose last frame the player stands in
+    actions: list[str]       # one action per block: forward, back, left, right, camera_l, camera_r, ...
+    seed: int = 0
+
+
+WALK_ACTIONS = {"forward", "back", "left", "right", "camera_l", "camera_r", "camera_up", "camera_down", "none"}
+
+
+@app.post("/api/walk")
+def walk(req: WalkReq):
+    """Matrix-Game 2.0 move: the branch's frame becomes (or continues) a world on the worker, and each action
+    plays one block of 12 frames from the player's eyes. A walk branch carries its world id, so the next
+    move from it continues the same KV caches instead of re-imagining the scene."""
+    d = _clip_dir(req.clip)
+    bs = json.load(open(d / "branches.json", encoding="utf-8")) if (d / "branches.json").exists() else []
+    p = next((b for b in bs if b["id"] == req.branch), None)
+    if not p or not p.get("image"):
+        raise HTTPException(404, "unknown branch")
+    acts = []
+    for a in req.actions:
+        a = a.strip().lower()
+        if not all(part in WALK_ACTIONS or part in {"camera", "l", "r", "up", "down"} for part in a.split("_")):
+            raise HTTPException(400, f"unknown action {a!r}")
+        acts.append(a)
+    if not acts or len(acts) > 8:
+        raise HTTPException(400, "1 to 8 actions per move")
+    world = p.get("world") or ("w-" + p["id"])
+    bid = "walk-" + uuid.uuid4().hex[:8]
+    bdir = d / "branches" / bid
+    bdir.mkdir(parents=True)
+    seed = req.seed or (p.get("seed") or int(time.time())) % 100000
+    g = graphs.walk_clip(WORK / p["image"], acts, world, seed, bid)
+    try:
+        res = deploy_run(g, d, bdir / "out", timeout=900)
+    except HTTPException:
+        shutil.rmtree(bdir, ignore_errors=True)
+        raise
+    vids = [o for o in res["outputs"] if o.suffix.lower() == ".mp4"]
+    if not vids:
+        shutil.rmtree(bdir, ignore_errors=True)
+        raise HTTPException(502, "the walk job returned no video")
+    clip = bdir / "walk.mp4"
+    shutil.copy(vids[0], clip)
+    state = {}
+    for o in res["outputs"]:
+        if o.suffix.lower() == ".json":
+            try:
+                state = json.load(open(o, encoding="utf-8"))
+            except Exception:
+                pass
+    last = bdir / "last.png"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-sseof", "-0.1", "-i", str(clip), "-frames:v", "1", str(last)])
+    b = dict(id=bid, kind="walk", parent=p["id"], moment=p.get("moment"), label=p["label"], actions=acts,
+             world=world, resumed=state.get("resumed"), blocks_left=state.get("blocks_left"),
+             frames=state.get("frames"), fps=graphs.MG2_FPS, seed=seed, seconds=res["seconds"], job=res["job"],
+             video=str(clip.relative_to(WORK)).replace("\\", "/"),
+             image=str(last.relative_to(WORK)).replace("\\", "/") if last.exists() else None)
+    _save_branch(req.clip, b)
+    return b
 
 
 @app.get("/api/deployment")

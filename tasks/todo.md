@@ -1,4 +1,4 @@
-# Open Source Higgsfield submission (deadline 2026-11-03 09:00 PT)
+# Open Source Higgsfield submission (deadline 2026-11-03 08:30 PT)
 
 Plan written 2026-11-02 evening. Repo assembled from `synaps-optic-context/recast` (newest
 scripts) and `hugginface_profile/video_generator` (Render Studio, run scripts).
@@ -27,6 +27,28 @@ scripts) and `hugginface_profile/video_generator` (Render Studio, run scripts).
 
 - [x] Switch eyes (from_branch): verified cat outcome -> girl's eyes; image-2 conditioning rejected, text continuity kept
 
+## Real-time lane: Matrix-Game 2.0 (started 2026-11-03 00:30 UTC, user said "keep going")
+Goal: an action-driven first-person chunk (WASD + camera) from the POV frame, so the game feels live instead
+of one 20-60 s clip per move. Production deployment (release v2) was to stay untouched until v3 was proven.
+- [x] Research: no ComfyUI node and no diffusers pipeline exist for 2.0; the official code needs flash-attn only
+      in the action module and the cross-attention; everything else already falls back to SDPA
+- [x] `../ComfyUI-MatrixGame2` (local git repo, MIT): vendored `mg2core/` with an SDPA `attention.py`,
+      `runner.py` (streaming pipeline as a resident `Session`, one 12-frame block per action, KV caches kept
+      between prompts), nodes `MatrixGame2Loader` + `MatrixGame2Walk` (writes a state JSON next to the mp4)
+- [x] CPU smoke test (random weights, 1 layer, 352x640): 3 blocks incl. KV-cache rollover, session restart, all OK
+- [x] Node registers in ComfyUI 0.37 (`/object_info`), graph accepted by `/prompt` with placeholder weights
+- [x] comfy-build.yaml: 3 Skywork/Matrix-Game-2.0 weights by sha256 + the node as a `source: local` zip
+      (no public repo needed); release v3 `7655ecaa-acb7-4c2b-8cdc-1853ee584b0c` green 2026-11-03 01:02 UTC
+      (diffusers 0.42.1, einops, ftfy installed from the pack's requirements)
+- [x] game/server.py `/api/walk`, game/graphs.py `walk_clip`, UI pad + WASD/QE/RF keys, WALK tree nodes
+- [ ] BLOCKED: staging deployment on v3 refused with `deploy_payment_required`; `comfy cloud status` shows the
+      "NYC Build Night" workspace at -$19.41 (-4095 credits) and production was stopped with stopReason
+      `credits` at 16:25 UTC. No Matrix-Game job has run on a GPU yet. Needs credits, then:
+      `comfy deploy up comfy-build.yaml --create --name staging --release 7655ecaa-acb7-4c2b-8cdc-1853ee584b0c --gpu rtx-pro-6000-mig-2g-48gb --region us --min 0 --max 1 --no-editor`
+      and `comfy deploy run comfy-build.yaml --deployment staging --workflow <probe> --asset-root <dir with pov.png>`
+      (probe graph: %TEMP%\wf\mg2_walk.api.json)
+- [ ] After a green probe: time per block, move production to v3, README numbers, demo shot
+
 ## Demo video (user records)
 - [ ] Screen capture per `demo/SHOT_LIST.md`, under 2 min
 - [ ] Upload unlisted, paste link into README
@@ -42,3 +64,10 @@ scripts) and `hugginface_profile/video_generator` (Render Studio, run scripts).
 - Docs claims cross-checked against the scripts: LoRA defaults, pose_body --cuts, face_crops --from-pose, make_refs _hq output.
 - Open risk: demo/cat_rap_example.mp4 is derived from Higgsfield's own example clip (their performer is in frame). Higgsfield sent Comfy a cease-and-desist about the challenge. User decides whether to keep it or swap for a clip they own.
 - Not done: CUDA setup path is untested on NVIDIA hardware (stated in README).
+
+## Review (2026-11-03 12:20 ET)
+- The laptop slept from 20:12 ET (01:12 UTC) to 12:12 ET; the 08:30 PT deadline passed while it was asleep.
+  Nothing ran in between. The Matrix-Game lane was built and release v3 cut before the sleep.
+- The Comfy workspace is a shared team workspace (86 seats); its balance went negative overnight and the
+  production deployment was stopped for credits, so neither app can be demoed on the platform until it is topped up.
+- Local servers restarted: game 8766 (new /api/walk), Studio 8765 and ComfyUI 8188 untouched.

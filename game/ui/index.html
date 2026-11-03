@@ -50,6 +50,13 @@
   .busy { color:var(--acc); font-size:13px }
   .err { color:var(--bad); font-size:13px; white-space:pre-wrap }
   .hint { color:var(--dim); font-size:13px }
+  .pad { display:grid; grid-template-columns:repeat(3,56px); gap:6px; justify-content:start; margin:8px 0 }
+  .pad button { padding:0; height:44px; font-size:18px; background:var(--panel); color:var(--fg); border:1px solid var(--line) }
+  .pad button:hover { border-color:var(--acc2) }
+  .pad button.cam { color:var(--acc2) }
+  .pad .sp { visibility:hidden }
+  .walkmeta { font-size:12px; color:var(--dim) }
+  .live { color:#7CFF9E }
 </style>
 </head>
 <body>
@@ -82,6 +89,17 @@
     </div>
     <textarea id="outcome" rows="2" placeholder="or write the outcome in your own words"></textarea>
     <div class="row"><button id="outBtn" disabled>Play it out</button> <button class="alt" id="contBtn" disabled>Keep going from here</button></div>
+
+    <h2>4 · walk it <span class="live">live</span> (Matrix-Game 2.0)</h2>
+    <div class="hint">WASD moves, Q/E or ←/→ turn the camera, R/F look up/down. Each key plays 12 frames from where you stand; the world stays on the GPU between moves.</div>
+    <div class="pad" id="pad">
+      <button class="cam" data-a="camera_l" title="Q / ←">↰</button><button data-a="forward" title="W">▲</button><button class="cam" data-a="camera_r" title="E / →">↱</button>
+      <button data-a="left" title="A">◀</button><button data-a="back" title="S">▼</button><button data-a="right" title="D">▶</button>
+      <button class="cam" data-a="camera_up" title="R">↑</button><button class="sp"></button><button class="cam" data-a="camera_down" title="F">↓</button>
+    </div>
+    <div class="row"><label class="hint">blocks per key <select id="blocks"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label>
+      <label class="hint"><input type="checkbox" id="keys" checked style="width:auto"> keyboard</label></div>
+    <div class="walkmeta" id="walkmeta"></div>
     <div id="busy" class="busy"></div>
     <div id="err" class="err"></div>
   </aside>
@@ -173,15 +191,39 @@ $('#contBtn').onclick = () => branch && branch.kind === 'outcome' && playOut(bra
 
 function showBranch(b) {
   if (b.kind === 'pov') { $('#right').innerHTML = `<img src="/files/${b.image}">`; $('#rightCap').textContent = `${b.label} · first person · ${b.seconds}s on the GPU`; }
+  else if (b.kind === 'walk') { $('#right').innerHTML = `<video src="/files/${b.video}" autoplay muted playsinline></video>`; $('#rightCap').textContent = `${b.label} · walk ${b.actions.join(' ')} · ${b.frames ?? '?'} frames · ${b.seconds}s round trip${b.resumed ? ' · world continued' : ' · world started'}`; }
   else { $('#right').innerHTML = `<video src="/files/${b.video}" autoplay loop muted playsinline controls></video>`; $('#rightCap').textContent = `${b.label} · "${b.outcome}" · ${b.length} frames · ${b.seconds}s on the GPU`; }
   $('#contBtn').disabled = b.kind !== 'outcome';
+  $('#walkmeta').textContent = b.kind === 'walk' ? `world ${b.world} · ${b.blocks_left ?? '?'} blocks left` : (b.image ? 'press a key or the pad to walk from here' : '');
 }
 function renderTree() {
   const bs = clip.branches || [];
   const name = id => { const x = bs.find(b => b.id === id); return x ? x.label : id; };
-  $('#tree').innerHTML = bs.map(b => `<div class="node ${branch && branch.id === b.id ? 'sel' : ''}" data-id="${b.id}"><img src="/files/${b.image || ''}"><div class="meta"><b>${b.kind === 'pov' ? (b.parent ? 'SWITCH' : 'POV') : 'outcome'}</b> · ${b.label}${b.outcome ? ' · "' + b.outcome + '"' : ''}${b.parent ? ' · after ' + name(b.parent) : ''}</div></div>`).join('') || '<div class="hint">nothing generated yet</div>';
+  $('#tree').innerHTML = bs.map(b => `<div class="node ${branch && branch.id === b.id ? 'sel' : ''}" data-id="${b.id}"><img src="/files/${b.image || ''}"><div class="meta"><b>${b.kind === 'pov' ? (b.parent ? 'SWITCH' : 'POV') : (b.kind === 'walk' ? 'WALK' : 'outcome')}</b> · ${b.label}${b.outcome ? ' · "' + b.outcome + '"' : ''}${b.actions ? ' · ' + b.actions.join(' ') : ''}${b.parent ? ' · after ' + name(b.parent) : ''}</div></div>`).join('') || '<div class="hint">nothing generated yet</div>';
   document.querySelectorAll('.node').forEach(el => el.onclick = () => { branch = bs.find(b => b.id === el.dataset.id); if (branch.kind === 'pov') pov = branch; if (branch.moment && (!moment || moment.id !== branch.moment)) selectMoment(branch.moment, true); showBranch(branch); renderTree(); updateSwitchHint(); $('#outBtn').disabled = !pov; });
 }
+
+// --- walk: Matrix-Game 2.0 moves from the current branch's frame
+let walking = false;
+const KEYMAP = {w: 'forward', s: 'back', a: 'left', d: 'right', q: 'camera_l', e: 'camera_r', arrowleft: 'camera_l', arrowright: 'camera_r', r: 'camera_up', f: 'camera_down', arrowup: 'forward', arrowdown: 'back'};
+async function walkTo(action) {
+  if (!clip || !branch || !branch.image) { fail(new Error('pick a POV or outcome first, then walk from it')); return; }
+  if (walking) return;
+  walking = true;
+  const n = parseInt($('#blocks').value, 10) || 1;
+  busy(`walking ${action} x${n} (Matrix-Game 2.0 on the deployment)…`);
+  try {
+    const b = await api('/api/walk', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({clip: clip.id, branch: branch.id, actions: Array(n).fill(action)})});
+    clip.branches.push(b); branch = b; showBranch(b); renderTree(); busy('');
+  } catch (e) { fail(e); } finally { walking = false; }
+}
+document.querySelectorAll('#pad button[data-a]').forEach(bt => bt.onclick = () => walkTo(bt.dataset.a));
+window.addEventListener('keydown', e => {
+  if (!$('#keys').checked) return;
+  const t = e.target; if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) return;
+  const a = KEYMAP[e.key.toLowerCase()]; if (!a) return;
+  e.preventDefault(); walkTo(a);
+});
 </script>
 </body>
 </html>

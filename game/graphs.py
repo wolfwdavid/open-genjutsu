@@ -139,3 +139,24 @@ def outcome_prompt(character: str, outcome: str, scene: str) -> str:
 
 OUTCOME_NEGATIVE_EXTRA = ("third person view, the main character visible, back view, over-the-shoulder, "
                           "character walks into frame, static camera, text, watermark")
+
+
+# ----------------------------------------------------------------------------- Matrix-Game 2.0 walk
+MG2 = dict(transformer="base_distill.safetensors", vae="Wan2.1_VAE.pth",
+           clip_vision="models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth")
+MG2_FPS = 12
+
+
+def walk_clip(start: Path, actions: list[str], world: str, seed: int, prefix: str) -> dict:
+    """Matrix-Game 2.0 (ComfyUI-MatrixGame2): `start` is the frame the player stands in, `actions` is one
+    keyboard/camera action per block of 12 frames, `world` names the resident session on the worker so a
+    second call continues the same world (the node falls back to `start` when the world is gone)."""
+    g = Graph()
+    img = g.out(g.add("LoadImage", image=str(start)))
+    model = g.out(g.add("MatrixGame2Loader", compile_decoder=False, **MG2))
+    frames = g.out(g.add("MatrixGame2Walk", model=model, image=img, actions=", ".join(actions), session=world,
+                         seed=seed, filename_prefix=f"{prefix}/state"))
+    g.add("VHS_VideoCombine", images=frames, frame_rate=MG2_FPS, loop_count=0, filename_prefix=f"{prefix}/walk",
+          format="video/h264-mp4", pix_fmt="yuv420p", crf=17, save_metadata=False, trim_to_audio=False,
+          pingpong=False, save_output=True)
+    return g.nodes

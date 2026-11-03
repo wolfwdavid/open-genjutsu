@@ -82,10 +82,13 @@ YOLO does not know a Spartan:
 | characters | YOLOv10m ONNX (COCO) | laptop CPU |
 | POV frame | Qwen-Image-Edit-2509 GGUF Q4 + Lightning 4-step LoRA | Comfy platform deployment, one `comfy deploy run` |
 | outcome clip | Wan2.2 I2V A14B GGUF Q4, high + low experts, lightx2v 4-step LoRAs | same deployment, one `comfy deploy run` |
+| walk (live moves) | Matrix-Game 2.0 universal distilled (1.8B, 352x640, 3 steps) via `ComfyUI-MatrixGame2` | same deployment on release v3, one `comfy deploy run` per key press; the world stays resident between presses. Built and CPU-tested, untested on the GPU (credits) |
 
 All weights are open and resolved by sha256 to public Hugging Face sources in `comfy-build.yaml`
 (release v2 of the build). Both graphs are in `game/graphs.py` and are plain API-format prompts;
-nothing custom beyond ComfyUI-GGUF and VideoHelperSuite.
+nothing custom beyond ComfyUI-GGUF and VideoHelperSuite for the POV and outcome graphs; the walk
+graph adds the sibling `ComfyUI-MatrixGame2` node pack (`graphs.walk_clip`, `POST /api/walk`
+with `{clip, branch, actions: ["forward", ...]}`; keys W/A/S/D move, Q/E turn, R/F look up/down).
 
 ## Run it
 

@@ -2,7 +2,7 @@ schema: comfy-build/1
 id: 2ba4aa66-00cf-4905-9dcc-347f5acbb29c
 name: open-genjutsu
 description: Wan2.2-Animate character replacement + GGUF + VHS, the ComfyUI side of open-genjutsu (Open Source Higgsfield entry)
-syncedRevision: '2026-11-02T23:45:52.99074Z'
+syncedRevision: '2026-11-03T00:57:02.797742Z'
 definition:
   schema: distribution-definition/0
   baseComfyVersion: v0.37.0
@@ -13,6 +13,12 @@ definition:
       sizeBytes: 1264219396
       source: local
       sourceUri: https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/clip_vision/clip_vision_h.safetensors?download=true
+      type: clip_vision
+    - filename: models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth
+      sha256: 628c9998b613391f193eb67ff68da9667d75f492911e4eb3decf23460a158c38
+      sizeBytes: 4772359047
+      source: huggingface
+      sourceUri: https://huggingface.co/Skywork/Matrix-Game-2.0/resolve/main/models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth
       type: clip_vision
     - blobId: 6b915568-0cab-429a-ab51-eddd264746b7
       filename: vitpose_h_wholebody_data.bin
@@ -53,6 +59,12 @@ definition:
       sizeBytes: 9651728896
       source: huggingface
       sourceUri: https://huggingface.co/QuantStack/Wan2.2-I2V-A14B-GGUF/resolve/main/LowNoise/Wan2.2-I2V-A14B-LowNoise-Q4_K_M.gguf
+      type: diffusion_models
+    - filename: base_distill.safetensors
+      sha256: 55133515cf15a1ddc3d49e1f1102d79d536a1fca5459fdb2498b82a9d1b7a7e7
+      sizeBytes: 6477092432
+      source: huggingface
+      sourceUri: https://huggingface.co/Skywork/Matrix-Game-2.0/resolve/main/base_distilled_model/base_distill.safetensors
       type: diffusion_models
     - filename: qwen-image-edit-2509-Q4_K_M.gguf
       sha256: 25bc339be9096fbc0aeb6fc9fb7404044891ec9879c74d8ebe7d7c21aefef231
@@ -105,6 +117,12 @@ definition:
       source: local
       sourceUri: https://huggingface.co/city96/umt5-xxl-encoder-gguf/resolve/main/umt5-xxl-encoder-Q5_K_M.gguf
       type: text_encoders
+    - filename: Wan2.1_VAE.pth
+      sha256: 38071ab59bd94681c686fa51d75a1968f64e470262043be31f7a094e442fd981
+      sizeBytes: 507609880
+      source: huggingface
+      sourceUri: https://huggingface.co/Skywork/Matrix-Game-2.0/resolve/main/Wan2.1_VAE.pth
+      type: vae
     - filename: qwen_image_vae.safetensors
       sha256: a70580f0213e67967ee9c95f05bb400e8fb08307e017a924bf3441223e023d1f
       sizeBytes: 253806246
@@ -124,6 +142,12 @@ definition:
       name: ComfyUI-GGUF
       repository: https://github.com/city96/ComfyUI-GGUF
       source: git
+    - blobId: 8836548c-e3c3-46ae-80ac-cddb7c5d1626
+      localDigest: cef67ea43efeeea4fa11c64bcda09a183fe7b67a375e02c9d24981fef7f3fb40
+      localPath: ComfyUI-MatrixGame2
+      localSizeBytes: 240831
+      name: ComfyUI-MatrixGame2
+      source: local
     - gitRef: 4d907bee61e92c2e65af3bd6383a4e4d356126d1
       localPath: ComfyUI-VideoHelperSuite
       name: ComfyUI-VideoHelperSuite
