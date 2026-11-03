@@ -86,7 +86,7 @@ def outcome_clip(start: Path, prompt: str, width: int, height: int, length: int,
     clip = g.out(g.add("CLIPLoaderGGUF", clip_name=MODELS["wan_clip"], type="wan"))
     vae = g.out(g.add("VAELoader", vae_name=MODELS["wan_vae"]))
     pos = g.out(g.add("CLIPTextEncode", clip=clip, text=prompt))
-    neg = g.out(g.add("CLIPTextEncode", clip=clip, text=WAN_NEGATIVE))
+    neg = g.out(g.add("CLIPTextEncode", clip=clip, text=WAN_NEGATIVE + ", " + OUTCOME_NEGATIVE_EXTRA))
     img = g.out(g.add("LoadImage", image=str(start)))
     img = g.out(g.add("ImageScale", image=img, upscale_method="lanczos", width=_even16(width),
                       height=_even16(height), crop="center"))
@@ -121,6 +121,13 @@ def pov_prompt(character: str, scene: str, others: str) -> str:
 
 
 def outcome_prompt(character: str, outcome: str, scene: str) -> str:
-    return (f"First-person view from the eyes of {character}, {scene}. {outcome} The camera is their head: "
-            f"it moves with their body, natural handheld motion, fast action, consistent lighting, "
-            f"cinematic, no text.")
+    low = "cat" in character or "dog" in character or "animal" in character
+    return (f"POV shot, first person, seen through the eyes of {character}, {scene}. We are {character}: "
+            f"the camera is our head and moves with our body, {'close to the ground' if low else 'at eye height'}. "
+            f"{character} is never shown on screen, no third-person view, no over-the-shoulder view; "
+            f"only our own {'paws' if low else 'hands and weapon'} may appear at the bottom edge. "
+            f"What happens: {outcome} Fast action, natural head motion, consistent lighting, cinematic, no text.")
+
+
+OUTCOME_NEGATIVE_EXTRA = ("third person view, the main character visible, back view, over-the-shoulder, "
+                          "character walks into frame, static camera, text, watermark")
