@@ -20,6 +20,9 @@ works on any footage, including the cat.
    the next three seconds forward from the POV frame with that outcome.
 5. **Keep going.** The last frame of every outcome is a new decision point, so the clip becomes a
    tree of branches, all shown under the stage.
+6. **Switch eyes.** Select any outcome in the tree, pick another character, and the button becomes
+   "Switch to their eyes": the world has moved on to what just happened, now seen by someone else.
+   This is the Halo Wars trick, the same battle from inside a different unit.
 
 ## It works
 
@@ -39,6 +42,11 @@ rifle in hand, the gunmen return fire, her hair intrudes at the edge. Honest lim
 still likes to drift toward an over-the-shoulder view on human characters.
 
 <p align="center"><img src="../docs/images/game_outcome_girl.jpg" width="840"></p>
+
+Switching eyes: after the cat's outcome ("the cat pounces on the gunman"), the same instant from the
+girl's eyes. The girl is out of frame, the cat is mid-leap at the gunman crouched beside her:
+
+<p align="center"><img src="../docs/images/game_switch_cat_to_girl.jpg" width="540"></p>
 
 The meme itself, from the "Halo Wars first person" clip: a third-person moment (left) and the same
 instant through the Spartan's eyes (right), typed in on the "someone else here" card because COCO
@@ -61,6 +69,10 @@ YOLO does not know a Spartan:
   produced a third-person shot within a second. The outcome prompt now states "we are X, X is never
   shown", and the negative prompt lists "third person, over-the-shoulder, character walks into
   frame". Outcomes read best in the first person plural: "we open fire".
+
+- A switch must carry the previous branch as text. Feeding the other character's first-person frame
+  as a second edit image kept that character's camera; describing what happened in words and editing
+  the source frame moved the camera correctly.
 
 ## What runs where
 

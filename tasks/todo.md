@@ -25,6 +25,8 @@ scripts) and `hugginface_profile/video_generator` (Render Studio, run scripts).
 - [x] Outcome prompt rewritten (viewer invisible + third-person negative) after the girl's first outcome drifted to third person; re-run is first person with hair at the edge
 - [x] Halo Spartan POV via the "someone else here" card: works (HUD text removed, marine ahead, rifle at the edge)
 
+- [x] Switch eyes (from_branch): verified cat outcome -> girl's eyes; image-2 conditioning rejected, text continuity kept
+
 ## Demo video (user records)
 - [ ] Screen capture per `demo/SHOT_LIST.md`, under 2 min
 - [ ] Upload unlisted, paste link into README

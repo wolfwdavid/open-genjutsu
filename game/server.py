@@ -125,6 +125,7 @@ class PovReq(BaseModel):
     character: str
     name: str = ""          # who this is, in the player's words (required for the "someone else" card)
     scene: str = "in the middle of the action"
+    from_branch: str = ""   # switch eyes: continue from this branch (its last frame conditions the new POV)
     seed: int = 0
 
 
@@ -147,13 +148,24 @@ def make_pov(req: PovReq):
         who = req.name.strip() or f"the {c['cls']}"
     label = who
     prompt = graphs.pov_prompt(who, req.scene, others)
+    context, after, parent = None, "", None
+    if req.from_branch:
+        bs = json.load(open(d / "branches.json", encoding="utf-8")) if (d / "branches.json").exists() else []
+        src = next((b for b in bs if b["id"] == req.from_branch), None)
+        if not src:
+            raise HTTPException(404, "unknown branch to switch from")
+        parent = src["id"]
+        # the previous branch is carried as text, not as a second image: a first-person frame of another
+        # character fed as image 2 dominated the edit and kept that character's camera
+        after = f"{src['label']}: {src['outcome']}" if src.get("outcome") else f"{src['label']}'s view"
+        prompt = graphs.pov_prompt(who, req.scene, others, after=after)
     bid = "pov-" + uuid.uuid4().hex[:8]
     bdir = d / "branches" / bid
     bdir.mkdir(parents=True)
     # the POV is generated from the full source frame at this moment (1:1 with the clip), not the crop
     frame = d / m["frame"]
     seed = req.seed or int(time.time()) % 100000
-    g = graphs.pov_frame(frame, prompt, a["width"], a["height"], seed, bid)
+    g = graphs.pov_frame(frame, prompt, a["width"], a["height"], seed, bid, context=context)
     try:
         res = deploy_run(g, d, bdir / "out")
     except HTTPException:
@@ -163,7 +175,7 @@ def make_pov(req: PovReq):
     shutil.copy(res["output"], pov)
     b = dict(id=bid, kind="pov", moment=m["id"], character=c["id"], label=label, prompt=prompt, seed=seed,
              image=str(pov.relative_to(WORK)).replace("\\", "/"), seconds=res["seconds"], job=res["job"],
-             parent=None)
+             parent=parent)
     _save_branch(req.clip, b)
     return b
 
@@ -207,7 +219,8 @@ def make_outcome(req: OutcomeReq):
     # the last frame is the next decision point
     last = bdir / "last.png"
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-sseof", "-0.1", "-i", str(clip), "-frames:v", "1", str(last)])
-    b = dict(id=bid, kind="outcome", parent=p["id"], label=who, outcome=req.outcome, prompt=prompt, seed=seed,
+    b = dict(id=bid, kind="outcome", parent=p["id"], moment=p.get("moment"), label=who, outcome=req.outcome,
+             prompt=prompt, seed=seed,
              video=str(clip.relative_to(WORK)).replace("\\", "/"),
              image=str(last.relative_to(WORK)).replace("\\", "/") if last.exists() else None,
              seconds=res["seconds"], job=res["job"], width=W, height=H, length=length)

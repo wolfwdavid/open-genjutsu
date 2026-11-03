@@ -71,6 +71,7 @@
     <input id="name" placeholder="who are you here? e.g. the white-haired girl, the black cat, the marine" style="margin-top:8px">
     <input id="scene" placeholder="what is happening (optional, helps the model)" style="margin-top:8px">
     <div class="row"><button id="povBtn" disabled>See it from their eyes</button></div>
+    <div class="hint" id="switchHint"></div>
 
     <h2>3 · what happens next?</h2>
     <div class="row" id="presets">
@@ -131,8 +132,9 @@ function renderClip() {
   renderTree();
   if (a.moments.length) selectMoment(a.moments[0].id);
 }
-function selectMoment(id) {
-  moment = clip.analysis.moments.find(m => m.id === id); character = null; pov = null;
+function selectMoment(id, keepBranch) {
+  moment = clip.analysis.moments.find(m => m.id === id); character = null; if (!keepBranch) { pov = null; branch = null; }
+  updateSwitchHint();
   document.querySelectorAll('.moment').forEach(el => el.classList.toggle('sel', el.dataset.id === id));
   $('#left').innerHTML = `<img src="${fileUrl(moment.frame)}">`; $('#leftCap').textContent = `source · ${moment.t}s`;
   $('#chars').innerHTML = moment.characters.map(c => `<div class="char" data-id="${c.id}"><img src="${fileUrl(c.crop)}"><div class="l">${c.label}</div></div>`).join('') || '<div class="hint">nobody detected here, try another moment</div>';
@@ -140,11 +142,17 @@ function selectMoment(id) {
   $('#povBtn').disabled = true; $('#outBtn').disabled = true; $('#contBtn').disabled = true;
 }
 
+function updateSwitchHint() {
+  const from = branch && branch.kind === 'outcome' ? branch : null;
+  $('#povBtn').textContent = from ? 'Switch to their eyes' : 'See it from their eyes';
+  $('#switchHint').textContent = from ? `switching from ${from.label}'s branch: the new view continues after "${from.outcome}"` : '';
+}
 $('#povBtn').onclick = async () => {
   if (!character) return;
-  busy(`rendering ${character.label}'s point of view on the deployment…`); $('#povBtn').disabled = true;
+  const from = branch && branch.kind === 'outcome' ? branch.id : '';
+  busy(`${from ? 'switching to' : 'rendering'} ${$('#name').value || character.label}'s point of view on the deployment…`); $('#povBtn').disabled = true;
   try {
-    pov = await api('/api/pov', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({clip: clip.id, moment: moment.id, character: character.id, name: $('#name').value, scene: $('#scene').value || 'in the middle of the action'})});
+    pov = await api('/api/pov', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({clip: clip.id, moment: moment.id, character: character.id, name: $('#name').value, scene: $('#scene').value || 'in the middle of the action', from_branch: from})});
     clip.branches.push(pov); branch = pov; showBranch(pov); renderTree(); $('#outBtn').disabled = false; busy('');
   } catch (e) { fail(e); } finally { $('#povBtn').disabled = false; }
 };
@@ -170,8 +178,9 @@ function showBranch(b) {
 }
 function renderTree() {
   const bs = clip.branches || [];
-  $('#tree').innerHTML = bs.map(b => `<div class="node ${branch && branch.id === b.id ? 'sel' : ''}" data-id="${b.id}"><img src="/files/${b.image || ''}"><div class="meta"><b>${b.kind === 'pov' ? 'POV' : 'outcome'}</b> · ${b.label}${b.outcome ? ' · "' + b.outcome + '"' : ''}${b.parent ? ' · from ' + b.parent : ''}</div></div>`).join('') || '<div class="hint">nothing generated yet</div>';
-  document.querySelectorAll('.node').forEach(el => el.onclick = () => { branch = bs.find(b => b.id === el.dataset.id); if (branch.kind === 'pov') pov = branch; showBranch(branch); renderTree(); $('#outBtn').disabled = !pov; });
+  const name = id => { const x = bs.find(b => b.id === id); return x ? x.label : id; };
+  $('#tree').innerHTML = bs.map(b => `<div class="node ${branch && branch.id === b.id ? 'sel' : ''}" data-id="${b.id}"><img src="/files/${b.image || ''}"><div class="meta"><b>${b.kind === 'pov' ? (b.parent ? 'SWITCH' : 'POV') : 'outcome'}</b> · ${b.label}${b.outcome ? ' · "' + b.outcome + '"' : ''}${b.parent ? ' · after ' + name(b.parent) : ''}</div></div>`).join('') || '<div class="hint">nothing generated yet</div>';
+  document.querySelectorAll('.node').forEach(el => el.onclick = () => { branch = bs.find(b => b.id === el.dataset.id); if (branch.kind === 'pov') pov = branch; if (branch.moment && (!moment || moment.id !== branch.moment)) selectMoment(branch.moment, true); showBranch(branch); renderTree(); updateSwitchHint(); $('#outBtn').disabled = !pov; });
 }
 </script>
 </body>

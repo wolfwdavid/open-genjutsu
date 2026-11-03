@@ -52,8 +52,9 @@ def _even16(v: int) -> int:
 
 
 def pov_frame(frame: Path, prompt: str, width: int, height: int, seed: int, prefix: str,
-              steps: int = 4, cfg: float = 1.0, shift: float = 3.0) -> dict:
-    """Qwen-Image-Edit-2509 edit of `frame`; output PNG saved under `prefix`."""
+              steps: int = 4, cfg: float = 1.0, shift: float = 3.0, context: Path | None = None) -> dict:
+    """Qwen-Image-Edit-2509 edit of `frame` (image 1); `context` (image 2) is the last frame of what
+    just happened in another character's branch, so a switched POV continues the same story."""
     g = Graph()
     model = g.out(g.add("UnetLoaderGGUF", unet_name=MODELS["qwen_unet"]))
     model = g.out(g.add("LoraLoaderModelOnly", model=model, lora_name=MODELS["qwen_lora"], strength_model=1.0))
@@ -63,8 +64,13 @@ def pov_frame(frame: Path, prompt: str, width: int, height: int, seed: int, pref
     img = g.out(g.add("LoadImage", image=str(frame)))
     img = g.out(g.add("ImageScale", image=img, upscale_method="lanczos", width=_even16(width),
                       height=_even16(height), crop="center"))
-    pos = g.out(g.add("TextEncodeQwenImageEditPlus", clip=clip, prompt=prompt, vae=vae, image1=img))
-    neg = g.out(g.add("TextEncodeQwenImageEditPlus", clip=clip, prompt="", vae=vae, image1=img))
+    enc = dict(image1=img)
+    if context is not None:
+        ctx = g.out(g.add("LoadImage", image=str(context)))
+        enc["image2"] = g.out(g.add("ImageScale", image=ctx, upscale_method="lanczos", width=_even16(width),
+                                    height=_even16(height), crop="center"))
+    pos = g.out(g.add("TextEncodeQwenImageEditPlus", clip=clip, prompt=prompt, vae=vae, **enc))
+    neg = g.out(g.add("TextEncodeQwenImageEditPlus", clip=clip, prompt="", vae=vae, **enc))
     latent = g.out(g.add("EmptySD3LatentImage", width=_even16(width), height=_even16(height), batch_size=1))
     latent = g.out(g.add("KSampler", model=model, positive=pos, negative=neg, latent_image=latent, seed=seed,
                          steps=steps, cfg=cfg, sampler_name="euler", scheduler="simple", denoise=1.0))
@@ -108,7 +114,7 @@ def outcome_clip(start: Path, prompt: str, width: int, height: int, length: int,
     return g.nodes
 
 
-def pov_prompt(character: str, scene: str, others: str) -> str:
+def pov_prompt(character: str, scene: str, others: str, after: str = "") -> str:
     low = "cat" in character or "dog" in character or "animal" in character
     height = ("very low to the ground, the camera is only a few centimetres above the pavement" if low
               else "at that character's eye height")
@@ -117,7 +123,9 @@ def pov_prompt(character: str, scene: str, others: str) -> str:
             f"{height}, facing the direction they were facing. {character} must not be visible anywhere; "
             f"at most their own {'paws' if low else 'hands'} appear at the very bottom edge. "
             f"Keep the same place, lighting, moment, art style and colours, and keep everyone else "
-            f"({others}) where they were, {scene}. Wide-angle, no text, no UI.")
+            f"({others}) where they were, {scene}. Wide-angle, no text, no UI."
+            + (f" What just happened, seen by someone else: {after}. The scene has moved on to that state; "
+               f"show that new state from {character}'s eyes." if after else ""))
 
 
 def outcome_prompt(character: str, outcome: str, scene: str) -> str:
