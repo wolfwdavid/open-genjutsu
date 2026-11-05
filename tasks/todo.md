@@ -73,7 +73,7 @@ of one 20-60 s clip per move. Production deployment (release v2) was to stay unt
 - Local servers restarted: game 8766 (new /api/walk), Studio 8765 and ComfyUI 8188 untouched.
 
 ## Review (2026-11-05)
-- Pushed open-genjutsu main and pushed the node pack to https://github.com/wolfwdavid/ComfyUI-MatrixGame2 (private for now, MIT). The README links resolve once it is made public: `gh repo edit wolfwdavid/ComfyUI-MatrixGame2 --visibility public --accept-visibility-change-consequences`.
+- Pushed open-genjutsu main and pushed the node pack to https://github.com/wolfwdavid/ComfyUI-MatrixGame2 (public, MIT; made public by the user on 2026-11-05).
 - Node pack README now has a Status section: CPU-verified and built into release v3, not yet run on a GPU with real weights.
 - The build spec still packages the node as `source: local`; switching it to the git repo is optional and needs a new release.
 - Still open: GPU probe on release v3 (needs workspace credits), demo video, sign-up and submission forms, social post.
