@@ -87,7 +87,7 @@ YOLO does not know a Spartan:
 All weights are open and resolved by sha256 to public Hugging Face sources in `comfy-build.yaml`
 (release v2 of the build). Both graphs are in `game/graphs.py` and are plain API-format prompts;
 nothing custom beyond ComfyUI-GGUF and VideoHelperSuite for the POV and outcome graphs; the walk
-graph adds the sibling `ComfyUI-MatrixGame2` node pack (`graphs.walk_clip`, `POST /api/walk`
+graph adds the sibling [`ComfyUI-MatrixGame2`](https://github.com/wolfwdavid/ComfyUI-MatrixGame2) node pack (`graphs.walk_clip`, `POST /api/walk`
 with `{clip, branch, actions: ["forward", ...]}`; keys W/A/S/D move, Q/E turn, R/F look up/down).
 
 ## Run it

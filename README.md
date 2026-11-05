@@ -103,7 +103,7 @@ minute. Details, results and how to run: [`game/README.md`](game/README.md).
 
 **Walk it live (built, not yet run on a GPU).** A third lane wraps
 [Matrix-Game 2.0](https://huggingface.co/Skywork/Matrix-Game-2.0) (Skywork, MIT) as the custom node
-`ComfyUI-MatrixGame2` (shipped inside release v3 of the build as a local pack): WASD and camera keys
+[`ComfyUI-MatrixGame2`](https://github.com/wolfwdavid/ComfyUI-MatrixGame2) (shipped inside release v3 of the build as a local pack): WASD and camera keys
 play 12 first-person frames per press from the branch you stand in, and the world's KV caches stay
 resident on the worker between presses, so a move is one short job instead of a fresh minute-long
 render. The node runs every attention through PyTorch SDPA because the platform workers have no

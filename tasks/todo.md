@@ -32,7 +32,7 @@ Goal: an action-driven first-person chunk (WASD + camera) from the POV frame, so
 of one 20-60 s clip per move. Production deployment (release v2) was to stay untouched until v3 was proven.
 - [x] Research: no ComfyUI node and no diffusers pipeline exist for 2.0; the official code needs flash-attn only
       in the action module and the cross-attention; everything else already falls back to SDPA
-- [x] `../ComfyUI-MatrixGame2` (local git repo, MIT): vendored `mg2core/` with an SDPA `attention.py`,
+- [x] `../ComfyUI-MatrixGame2` (https://github.com/wolfwdavid/ComfyUI-MatrixGame2, MIT): vendored `mg2core/` with an SDPA `attention.py`,
       `runner.py` (streaming pipeline as a resident `Session`, one 12-frame block per action, KV caches kept
       between prompts), nodes `MatrixGame2Loader` + `MatrixGame2Walk` (writes a state JSON next to the mp4)
 - [x] CPU smoke test (random weights, 1 layer, 352x640): 3 blocks incl. KV-cache rollover, session restart, all OK
@@ -71,3 +71,9 @@ of one 20-60 s clip per move. Production deployment (release v2) was to stay unt
 - The Comfy workspace is a shared team workspace (86 seats); its balance went negative overnight and the
   production deployment was stopped for credits, so neither app can be demoed on the platform until it is topped up.
 - Local servers restarted: game 8766 (new /api/walk), Studio 8765 and ComfyUI 8188 untouched.
+
+## Review (2026-11-05)
+- Pushed open-genjutsu main and published the node pack as https://github.com/wolfwdavid/ComfyUI-MatrixGame2 (public, MIT).
+- Node pack README now has a Status section: CPU-verified and built into release v3, not yet run on a GPU with real weights.
+- The build spec still packages the node as `source: local`; switching it to the git repo is optional and needs a new release.
+- Still open: GPU probe on release v3 (needs workspace credits), demo video, sign-up and submission forms, social post.

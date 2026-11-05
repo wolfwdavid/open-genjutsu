@@ -19,4 +19,4 @@
 - Matrix-Game 2.0 on workers without flash-attn: only `action_module.py` and the i2v cross-attention call
   flash-attn unconditionally; an SDPA `flash_attn_func` with the same [B, L, H, D] layout is enough, and the
   KV-cache path never reaches flex_attention. Rotary tables assume CUDA at construction; patch for CPU tests.
-- The Claude Code auto-mode classifier blocks `gh repo create` (new public surface); local commits are fine.
+- Creating a new public GitHub repo needs explicit user approval; until then keep work in local commits and package custom nodes with `source: local`.
